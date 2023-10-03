@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  supervisor
+  employee
+}
+
+model User {
+  userId         Int            @id @default(autoincrement())
+  username       String         @db.VarChar(30) @unique
+  firstName      String         @db.VarChar(30)
+  lastName       String         @db.VarChar(30)
+  password       String         @db.VarChar(225)
+  userRole       Role           @default(employee)
+  email          String         @db.VarChar(225) @unique
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  CompanyProfile CompanyProfile @relation(fields: [companyId], references: [companyId])
+  companyId      Int
+  transaction    Transaction[]
+  orderList      OrderList[]
+
+  @@map("users")
+}
+
+model CompanyProfile {
+  companyId   Int      @id @default(autoincrement())
+  companyName String   @db.VarChar(225) @unique
+  companyLogo String   @db.VarChar(225)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User[]
+
+  @@map("companyProfiles")
+}
+
+model Supplier {
+  supplierId      Int         @id @default(autoincrement())
+  supplierName    String      @db.VarChar(225) @unique
+  supplierAddress String      @db.VarChar(225)
+  supplierTel     String      @db.VarChar(225)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  orderList       OrderList[]
+
+  @@map("suppliers")
+}
+
+model OrderList {
+  orderId      Int            @id @default(autoincrement())
+  receiveDate  DateTime       @default(now())
+  User         User           @relation(fields: [userUserId], references: [userId])
+  userUserId   Int
+  Supplier     Supplier       @relation(fields: [supplierId], references: [supplierId])
+  supplierId   Int
+  produstStock ProductStock[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@map("orders")
+}
+
+model ProductStock {
+  stockId        Int            @id @default(autoincrement())
+  productName    String         @db.VarChar(225)
+  stockQuantity  Int
+  pricePerUnit   Int
+  expirationDate DateTime?
+  OrderList      OrderList      @relation(fields: [orderId], references: [orderId])
+  orderId        Int
+  ProductShelf   ProductShelf[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@map("stocks")
+}
+
+model ProductShelf {
+  shelfItemId  Int          @id @default(autoincrement())
+  productStock ProductStock @relation(fields: [stockId], references: [stockId])
+  stockId      Int
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  transactions Transaction[]
+  @@map("shelves")
+}
+
+model Transaction {
+  transactionId Int      @id @default(autoincrement())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  User          User     @relation(fields: [userId], references: [userId])
+  userId        Int
+  shelves ProductShelf[]
+  @@map("transactions")
+}
