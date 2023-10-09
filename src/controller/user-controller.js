@@ -37,7 +37,7 @@ exports.registerAdmin = async (req, res, next) => {
     const createUserResult = await prisma.user.create({
       data: value,
     });
-    res.json({ message: "Completed", inputData: value, createUserResult });
+    res.json({createUserResult });
   } catch (error) {
     next(error);
   }
@@ -55,10 +55,12 @@ exports.registerUser = async (req, res, next) => {
     if (!(await checkExistingCompany(value))) {
       return next(createError(`Company not found`, 400));
     }
-    const result = await prisma.user.create({
+    value.password = await bcrypt.hash(value.password, 12);
+    const createUserresult = await prisma.user.create({
       data: value,
     });
-    res.json({ message: "done", result });
+    
+    res.json({ createUserresult});
   } catch (error) {
     next(error);
   }
