@@ -36,7 +36,7 @@ model User {
 model CompanyProfile {
   companyId   Int      @id @default(autoincrement())
   companyName String   @db.VarChar(225) @unique
-  companyLogo String   @db.VarChar(225)
+  companyLogo String?   @db.VarChar(225)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User[]
