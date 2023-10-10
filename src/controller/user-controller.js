@@ -1,5 +1,6 @@
 const prisma = require("../models/prisma");
 const createError = require("../utils/craeteError");
+const { USER_ADMIN } = require("../config/constrants");
 const {
   registerAdminSchema,
   registerUserSchema,
@@ -30,14 +31,14 @@ exports.registerAdmin = async (req, res, next) => {
 
     // Add the newly created company Id to the input value Obj
     value.companyId = companyCreateResult.companyId;
-    value.userRole = "admin";
+    value.userRole = USER_ADMIN;
     // Delete Company Name , already created
     delete value.companyName;
     value.password = await bcrypt.hash(value.password, 12);
     const createUserResult = await prisma.user.create({
       data: value,
     });
-    res.json({createUserResult });
+    res.json({ createUserResult });
   } catch (error) {
     next(error);
   }
@@ -46,6 +47,7 @@ exports.registerAdmin = async (req, res, next) => {
 exports.registerUser = async (req, res, next) => {
   try {
     const { value, error } = registerUserSchema.validate(req.body);
+    console.log(error);
     if (error) {
       return next(error);
     }
@@ -59,8 +61,8 @@ exports.registerUser = async (req, res, next) => {
     const createUserresult = await prisma.user.create({
       data: value,
     });
-    
-    res.json({ createUserresult});
+
+    res.json({ createUserresult });
   } catch (error) {
     next(error);
   }
@@ -68,7 +70,7 @@ exports.registerUser = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    const { value, error } = LoginSchema.validate(req.body);
+    const { value, error } = LoginSchema.validate(req.body,{abortEarly:false});
     if (error) {
       next(error);
     }
@@ -99,23 +101,23 @@ exports.login = async (req, res, next) => {
 
 //This middleware is an idea for filtering multiple filter
 // and can handle undefined filter get all company profile might not be useful in the real use case tho
-exports.getCompany = async (req, res, next) => {
-  const filterObj = {};
-  const { companyId, companyName } = req.query;
-  if (companyId) {
-    filterObj.companyId = +companyId;
-  }
-  if (companyName) {
-    filterObj.companyName = { contains: companyName };
-  }
-  try {
-    const result = await prisma.companyProfile.findMany({
-      where: {
-        AND: filterObj,
-      },
-    });
-    res.json({ message: "Completed", data: { result } });
-  } catch (error) {
-    next(error);
-  }
-};
+// exports.getCompany = async (req, res, next) => {
+//   const filterObj = {};
+//   const { companyId, companyName } = req.query;
+//   if (companyId) {
+//     filterObj.companyId = +companyId;
+//   }
+//   if (companyName) {
+//     filterObj.companyName = { contains: companyName };
+//   }
+//   try {
+//     const result = await prisma.companyProfile.findMany({
+//       where: {
+//         AND: filterObj,
+//       },
+//     });
+//     res.json({ message: "Completed", data: { result } });
+//   } catch (error) {
+//     next(error);
+//   }
+// };

@@ -1,6 +1,6 @@
 const Joi = require("joi");
 const prisma = require("../models/prisma");
-const createError = require("../utils/craeteError");
+const { USER_SUPERVISOR, USER_EMPLOYEE } = require("../config/constrants");
 
 exports.registerAdminSchema = Joi.object({
   //Check Company profile data
@@ -33,7 +33,7 @@ exports.registerUserSchema = Joi.object({
     .required()
     .strip(),
   email: Joi.string().email().required(),
-  userRole: Joi.string().allow("supervisor", " employee"),
+  userRole: Joi.string().valid(USER_EMPLOYEE, USER_SUPERVISOR),
   companyId: Joi.number().required(),
 });
 
@@ -43,15 +43,11 @@ exports.LoginSchema = Joi.object({
 });
 
 exports.checkExistingUser = async (value) => {
-  const username = value.username || value.usernameOrEmail
-  const email = value.email || value.usernameOrEmail
-  console.log(username,email)
+  const username = value.username || value.usernameOrEmail;
+  const email = value.email || value.usernameOrEmail;
   const existUser = await prisma.user.findFirst({
     where: {
-      OR: [
-        { username },
-        { email},
-      ],
+      OR: [{ username }, { email }],
     },
   });
   return existUser;
