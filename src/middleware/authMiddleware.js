@@ -6,7 +6,7 @@ exports.authentication = async (req, res, next) => {
   try {
     const authorization = req.headers.authorization;
     if (!authorization || authorization.split("Bearer") === "") {
-      return next(craeteError("You are not authorized", 429));
+      return next(craeteError("You are not authorized", 401));
     }
     const token = authorization.split("Bearer ")[1];
     const { userId } = jwt.verify(token, process.env.JWT_SECRET_KEY);
@@ -17,10 +17,10 @@ exports.authentication = async (req, res, next) => {
       },
     });
     if (!user) {
-      return next(craeteError("You are not authorized", 429));
+      return next(craeteError("You are not authorized", 401));
     }
     delete user.password;
-    req.user = user;
+    req.user = user;    
     next();
   } catch (error) {
     next(error);
