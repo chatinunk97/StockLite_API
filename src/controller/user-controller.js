@@ -44,10 +44,9 @@ exports.registerAdmin = async (req, res, next) => {
   }
 };
 
-exports.registerUser = async (req, res, next) => {
+exports.createUser = async (req, res, next) => {
   try {
     const { value, error } = registerUserSchema.validate(req.body);
-    console.log(error);
     if (error) {
       return next(error);
     }
@@ -86,8 +85,7 @@ exports.login = async (req, res, next) => {
       return next(createError("Invalid Credential", 404));
     }
     //Check credentail all OK from now
-    delete existUser.password;
-    const payload = existUser;
+    const payload = {userId : existUser.userId};
     const token = jwt.sign(
       payload,
       process.env.JWT_SECRET_KEY || "poq[jer;qok109;kd/.",
