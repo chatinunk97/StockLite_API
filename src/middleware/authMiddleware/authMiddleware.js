@@ -5,7 +5,7 @@ const prisma = require("../../models/prisma");
 exports.authentication = async (req, res, next) => {
   try {
     const authorization = req.headers.authorization;
-    if (!authorization || authorization.split("Bearer") === "") {
+    if (!authorization || authorization.split("Bearer ")[1] === "") {
       return next(craeteError("You are not authorized", 401));
     }
     const token = authorization.split("Bearer ")[1];
