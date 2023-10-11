@@ -1,6 +1,6 @@
-const craeteError = require("../utils/craeteError");
+const craeteError = require("../../utils/craeteError");
 const jwt = require("jsonwebtoken");
-const prisma = require("../models/prisma");
+const prisma = require("../../models/prisma");
 
 exports.authentication = async (req, res, next) => {
   try {

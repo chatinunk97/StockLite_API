@@ -43,30 +43,6 @@ exports.registerAdmin = async (req, res, next) => {
     next(error);
   }
 };
-
-exports.createUser = async (req, res, next) => {
-  try {
-    const { value, error } = registerUserSchema.validate(req.body);
-    if (error) {
-      return next(error);
-    }
-    if (await checkExistingUser(value)) {
-      return next(createError(`The username or email already in use`, 400));
-    }
-    if (!(await checkExistingCompany(value))) {
-      return next(createError(`Company not found`, 400));
-    }
-    value.password = await bcrypt.hash(value.password, 12);
-    const createUserresult = await prisma.user.create({
-      data: value,
-    });
-
-    res.json({ createUserresult });
-  } catch (error) {
-    next(error);
-  }
-};
-
 exports.login = async (req, res, next) => {
   try {
     const { value, error } = LoginSchema.validate(req.body,{abortEarly:false});
@@ -91,14 +67,37 @@ exports.login = async (req, res, next) => {
       process.env.JWT_SECRET_KEY || "poq[jer;qok109;kd/.",
       { expiresIn: process.env.JWT_EXPIRE }
     );
+    delete existUser.password
     res.json({ accessToken: token , user : existUser });
   } catch (error) {
     next(error);
   }
 };
 
+exports.createUser = async (req, res, next) => {
+  try {
+    const { value, error } = registerUserSchema.validate(req.body);
+    if (error) {
+      return next(error);
+    }
+    if (await checkExistingUser(value)) {
+      return next(createError(`The username or email already in use`, 400));
+    }
+    if (!(await checkExistingCompany(value))) {
+      return next(createError(`Company not found`, 400));
+    }
+    value.password = await bcrypt.hash(value.password, 12);
+    const createUserresult = await prisma.user.create({
+      data: value,
+    });
+
+    res.json({ createUserresult });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getUser = async(req,res,next)=>{
-  console.log(req.user)
   res.json(req.user)
 }
 //This middleware is an idea for filtering multiple filter
