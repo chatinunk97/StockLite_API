@@ -15,8 +15,8 @@ const errorMiddleWare = require("./middleware/defaultMiddleware/error");
 const requestLimitMiddleware = require('./middleware/defaultMiddleware/requestLimit')
 
 //Initial Middleware
-app.use(requestLimitMiddleware)
 app.use(cors())
+app.use(requestLimitMiddleware)
 app.use(morgan("dev"));
 app.use(express.json());
 

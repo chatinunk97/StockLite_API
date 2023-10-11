@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const userCreationMiddleware = require("../controller/user-controller");
+const userController = require("../controller/user-controller");
 const { authentication } = require("../middleware/authMiddleware");
 
 
-router.post("/admin", userCreationMiddleware.registerAdmin);
-router.post("/user", authentication,userCreationMiddleware.createUser);
-router.post('/login', userCreationMiddleware.login)
-
-// router.get("/company",userCreationMiddleware.getCompany)
+router.post("/admin", userController.registerAdmin);
+router.post("/user", authentication,userController.createUser);
+router.post('/login', userController.login)
+router.get('/user',authentication,userController.getUser)
+// router.get("/company",userController.getCompany)
 module.exports = router;

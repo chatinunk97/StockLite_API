@@ -91,12 +91,16 @@ exports.login = async (req, res, next) => {
       process.env.JWT_SECRET_KEY || "poq[jer;qok109;kd/.",
       { expiresIn: process.env.JWT_EXPIRE }
     );
-    res.json({ accessToken: token });
+    res.json({ accessToken: token , user : existUser });
   } catch (error) {
     next(error);
   }
 };
 
+exports.getUser = async(req,res,next)=>{
+  console.log(req.user)
+  res.json(req.user)
+}
 //This middleware is an idea for filtering multiple filter
 // and can handle undefined filter get all company profile might not be useful in the real use case tho
 // exports.getCompany = async (req, res, next) => {
