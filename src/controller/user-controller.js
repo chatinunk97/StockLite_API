@@ -102,6 +102,7 @@ exports.getUser = async(req,res,next)=>{
 }
 exports.filterUser = async (req, res, next) => {
   try {
+
     const filterObj = {};
     for (filterKey in req.query) {
       if (req.query[filterKey]) {
@@ -110,7 +111,7 @@ exports.filterUser = async (req, res, next) => {
     }
     //Add userId filter manually since it's a INT
     if (filterObj.userId) {
-      filterObj.userId = { gt: +req.query.userId - 1 };
+      filterObj.userId = +req.query.userId;
     }
 
     //Add filter for userRole and admin's companyID
@@ -147,25 +148,4 @@ exports.filterUser = async (req, res, next) => {
     next(error);
   }
 };
-//This middleware is an idea for filtering multiple filter
-// and can handle undefined filter get all company profile might not be useful in the real use case tho
-// exports.getCompany = async (req, res, next) => {
-//   const filterObj = {};
-//   const { companyId, companyName } = req.query;
-//   if (companyId) {
-//     filterObj.companyId = +companyId;
-//   }
-//   if (companyName) {
-//     filterObj.companyName = { contains: companyName };
-//   }
-//   try {
-//     const result = await prisma.companyProfile.findMany({
-//       where: {
-//         AND: filterObj,
-//       },
-//     });
-//     res.json({ message: "Completed", data: { result } });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+
