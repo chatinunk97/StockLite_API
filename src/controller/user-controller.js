@@ -165,29 +165,53 @@ exports.filterUser = async (req, res, next) => {
 
 exports.deleteUser = async (req, res, next) => {
   try {
-    const deleteUser = +(req.query.userId);
-    const companyId = +(req.user.companyId);
-    if(deleteUser === +req.user.userId){
-      return next(createError("You cannot delete your own account",400))
+    const deleteUser = +req.query.userId;
+    const companyId = +req.user.companyId;
+    if (deleteUser === +req.user.userId) {
+      return next(createError("You cannot delete your own account", 400));
     }
     const foundUser = await prisma.user.findFirst({
       where: {
-        AND: [
-          { userId: deleteUser },
-          { companyId: companyId },
-        ],
+        AND: [{ userId: deleteUser }, { companyId: companyId }],
       },
     });
-    if(!foundUser){
-      return next(createError("No user found",400))
+    if (!foundUser) {
+      return next(createError("No user found", 400));
     }
 
     const deleteResult = await prisma.user.delete({
-      where:{
-        userId : foundUser.userId
-      }
-    })
-    res.json({ deleteResult });
+      where: {
+        userId: foundUser.userId,
+      },
+    });
+    res.json({ message: `User : ${deleteResult.username} Deleted` });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.editUser = async (req, res, next) => {
+  try {
+    const editUser = req.body;
+    const companyId = +req.user.companyId;
+    const foundUser = await prisma.user.findFirst({
+      where: {
+        AND: [{ userId: +editUser.userId }, { companyId: companyId }],
+      },
+    });
+    if (!foundUser) {
+      return next(createError("No user found", 400));
+    }
+    // delete editUser.userId;
+    delete editUser.username;
+    delete editUser.createdAt;
+    console.log(editUser);
+    await prisma.user.update({
+      where: { userId: +editUser.userId },
+      data: editUser,
+      
+    });
+    res.json({ message: "User information updated" });
   } catch (error) {
     next(error);
   }
