@@ -20,21 +20,21 @@ exports.registerAdminSchema = Joi.object({
 });
 
 exports.registerUserSchema = Joi.object({
-  firstName: Joi.string().max(50).trim().required(),
-  lastName: Joi.string().max(50).trim().required(),
-  username: Joi.string().alphanum().min(3).max(30).trim().required(),
+  firstName: Joi.string().max(50).trim().required().label("First name"),
+  lastName: Joi.string().max(50).trim().required().label("Last name"),
+  username: Joi.string().alphanum().min(3).max(30).trim().required().label("Username"),
   password: Joi.string()
     .pattern(new RegExp("^[a-zA-Z0-9]{3,30}$"))
     .trim()
-    .required(),
+    .required().label("Password"),
   repeat_password: Joi.string()
     .valid(Joi.ref("password"))
     .trim()
     .required()
     .strip(),
-  email: Joi.string().email().required(),
-  userRole: Joi.string().valid(USER_EMPLOYEE, USER_SUPERVISOR),
-  companyId: Joi.number().required(),
+  email: Joi.string().email().required().label("Confirm Password"),
+  userRole: Joi.string().valid(USER_EMPLOYEE, USER_SUPERVISOR).label("User Role"),
+  companyId: Joi.number().required().label("Company ID"),
 });
 
 exports.LoginSchema = Joi.object({

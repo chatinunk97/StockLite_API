@@ -1,6 +1,10 @@
 const prisma = require("../models/prisma");
 const createError = require("../utils/craeteError");
-const { USER_ADMIN , USER_EMPLOYEE , USER_SUPERVISOR } = require("../config/constrants");
+const {
+  USER_ADMIN,
+  USER_EMPLOYEE,
+  USER_SUPERVISOR,
+} = require("../config/constrants");
 const {
   registerAdminSchema,
   registerUserSchema,
@@ -45,7 +49,9 @@ exports.registerAdmin = async (req, res, next) => {
 };
 exports.login = async (req, res, next) => {
   try {
-    const { value, error } = LoginSchema.validate(req.body,{abortEarly:false});
+    const { value, error } = LoginSchema.validate(req.body, {
+      abortEarly: false,
+    });
     if (error) {
       next(error);
     }
@@ -61,14 +67,14 @@ exports.login = async (req, res, next) => {
       return next(createError("Invalid Credential", 404));
     }
     //Check credentail all OK from now
-    const payload = {userId : existUser.userId};
+    const payload = { userId: existUser.userId };
     const token = jwt.sign(
       payload,
       process.env.JWT_SECRET_KEY || "poq[jer;qok109;kd/.",
       { expiresIn: process.env.JWT_EXPIRE }
     );
-    delete existUser.password
-    res.json({ accessToken: token , user : existUser });
+    delete existUser.password;
+    res.json({ accessToken: token, user: existUser });
   } catch (error) {
     next(error);
   }
@@ -89,6 +95,15 @@ exports.createUser = async (req, res, next) => {
     value.password = await bcrypt.hash(value.password, 12);
     const createUserresult = await prisma.user.create({
       data: value,
+      select: {
+        userId: true,
+        username: true,
+        createdAt: true,
+        companyId: true,
+        firstName: true,
+        lastName: true,
+        userRole: true,
+      },
     });
 
     res.json({ createUserresult });
@@ -97,12 +112,11 @@ exports.createUser = async (req, res, next) => {
   }
 };
 
-exports.getUser = async(req,res,next)=>{
-  res.json(req.user)
-}
+exports.getUser = async (req, res, next) => {
+  res.json(req.user);
+};
 exports.filterUser = async (req, res, next) => {
   try {
-
     const filterObj = {};
     for (filterKey in req.query) {
       if (req.query[filterKey]) {
@@ -119,11 +133,11 @@ exports.filterUser = async (req, res, next) => {
       if (
         filterObj.userRole === USER_EMPLOYEE ||
         filterObj.userRole === USER_SUPERVISOR
-      ){
-        filterObj.userRole = req.query.userRole;}
-        else{
-          delete filterObj.userRole
-        }
+      ) {
+        filterObj.userRole = req.query.userRole;
+      } else {
+        delete filterObj.userRole;
+      }
     }
 
     //This is a must have
@@ -143,9 +157,38 @@ exports.filterUser = async (req, res, next) => {
         userRole: true,
       },
     });
-    res.json({searchResult });
+    res.json({ searchResult });
   } catch (error) {
     next(error);
   }
 };
 
+exports.deleteUser = async (req, res, next) => {
+  try {
+    const deleteUser = +(req.query.userId);
+    const companyId = +(req.user.companyId);
+    if(deleteUser === +req.user.userId){
+      return next(createError("You cannot delete your own account",400))
+    }
+    const foundUser = await prisma.user.findFirst({
+      where: {
+        AND: [
+          { userId: deleteUser },
+          { companyId: companyId },
+        ],
+      },
+    });
+    if(!foundUser){
+      return next(createError("No user found",400))
+    }
+
+    const deleteResult = await prisma.user.delete({
+      where:{
+        userId : foundUser.userId
+      }
+    })
+    res.json({ deleteResult });
+  } catch (error) {
+    next(error);
+  }
+};

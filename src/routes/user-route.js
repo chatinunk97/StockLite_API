@@ -22,6 +22,7 @@ router.get(
   adminAuthentication,
   userController.filterUser
 );
+router.delete("/user",authentication,adminAuthentication,userController.deleteUser)
 
 // This one is for nutural use to get LoginUser state
 router.get("/user", authentication, userController.getUser);
