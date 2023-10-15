@@ -1,5 +1,5 @@
 const prisma = require("../models/prisma");
-const createError = require("../utils/craeteError");
+const createError = require("../utils/createError");
 const {
   USER_ADMIN,
   USER_EMPLOYEE,

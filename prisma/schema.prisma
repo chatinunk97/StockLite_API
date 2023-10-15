@@ -48,7 +48,7 @@ model CompanyProfile {
 
 model Supplier {
   supplierId              Int             @id @default(autoincrement())
-  supplierName            String          @unique @db.VarChar(225)
+  supplierName            String          @db.VarChar(225)
   supplierAddress         String          @db.VarChar(225)
   supplierTel             String          @db.VarChar(225)
   createdAt               DateTime        @default(now())
