@@ -23,6 +23,12 @@ exports.authentication = async (req, res, next) => {
     req.user = user;    
     next();
   } catch (error) {
+    if (
+      error.name === "TokenExpiredError" ||
+      error.name === "JsonWebTokenError"
+    ) {
+      error.statusCode = 401;
+    }
     next(error);
   }
 };

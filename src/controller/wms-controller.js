@@ -25,10 +25,10 @@ exports.createSupplier = async (req, res, next) => {
     if (existSupplier) {
       return next(createError("Supplier with this name already exist", 400));
     }
-    const result = await prisma.supplier.create({
+    const createResult = await prisma.supplier.create({
       data: value,
     });
-    res.json({ message: result });
+    res.json({  createResult });
   } catch (error) {
     next(error);
   }
@@ -37,10 +37,12 @@ exports.createSupplier = async (req, res, next) => {
 exports.filterSupplier = async (req, res, next) => {
   try {
     const { value, error } = ValidateSupplierFilter(req.query);
-    console.log(value, error);
+    if (error) {
+      return next(error);
+    }
     const filterObj = {};
-    for (filterKey in req.query) {
-      if (req.query[filterKey]) {
+    for (filterKey in value) {
+      if (value[filterKey]) {
         filterObj[filterKey] = { startsWith: "%" + req.query[filterKey] };
       }
     }
@@ -50,10 +52,10 @@ exports.filterSupplier = async (req, res, next) => {
     }
     //Add user's CompanyID
     filterObj.companyId = +req.user.companyId;
-    const searchResul1t = await prisma.supplier.findMany({
+    const searchResult = await prisma.supplier.findMany({
       where: filterObj,
     });
-    return res.json({ searchResul1t });
+    return res.json({ searchResult });
   } catch (error) {
     next(error);
   }
@@ -61,6 +63,8 @@ exports.filterSupplier = async (req, res, next) => {
 
 exports.editSupplier = async (req, res, next) => {
   try {
+    delete req.body.createdAt
+    delete req.body.updatedAt
     const { value, error } = ValidateSupplierInput(req.body);
     if (error) {
       return next(error);
@@ -78,8 +82,9 @@ exports.editSupplier = async (req, res, next) => {
     }
     delete value.supplierId;
     delete value.companyId;
+    console.log(existSupplier)
     const updatedInfo = await prisma.supplier.update({
-      where: { supplierId: existSupplier.companyId },
+      where: { supplierId: existSupplier.supplierId },
       data: value,
     });
     res.json({ data: updatedInfo });
