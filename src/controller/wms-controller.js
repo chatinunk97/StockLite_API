@@ -115,7 +115,7 @@ exports.deleteSupplier = async (req, res, next) => {
         supplierId: deleteSupplier,
       },
     });
-    res.json({ message: `Supplier : ${deleteResult.supplierName} Deleted` });
+    res.json({ deleteResult});
   } catch (error) {
     next(error);
   }
