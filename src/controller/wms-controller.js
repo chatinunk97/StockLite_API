@@ -6,6 +6,7 @@ const {
   ValidateSupplierId,
   CheckSupplier,
   checkStartEndDate,
+  checkCreateOrder,
 } = require("../validators/wmsValidator");
 const Joi = require("joi");
 
@@ -129,17 +130,21 @@ exports.deleteSupplier = async (req, res, next) => {
 exports.createOrder = async (req, res, next) => {
   try {
     const data = req.body;
-    req.body.receiveDate = new Date(req.body.receiveDate);
-    req.body.userId = req.user.userId;
+    data.userId = req.user.userId;
+    const { value, error } = checkCreateOrder(data);
+    if (error) {
+      return next(error);
+    }
+
     const existSupplier = await CheckSupplier(
       req.user.companyId,
-      req.body.supplierId
+      value.supplierId
     );
     if (!existSupplier) {
       return next(createError("Supplier not found", 404));
     }
     const createResult = await prisma.orderList.create({
-      data,
+      data: value,
     });
     res.json({ createResult });
   } catch (error) {
@@ -168,12 +173,10 @@ exports.filterOrder = async (req, res, next) => {
     if (req.query.endDate) {
       receiveDateFilter.lte = new Date(req.query.endDate); // Start of date range
     }
-    console.log(receiveDateFilter);
-    console.log(filterObj);
     const searchResult = await prisma.orderList.findMany({
       where: {
-        Supplier : {
-          companyId : +req.user.companyId
+        Supplier: {
+          companyId: +req.user.companyId,
         },
         AND: [
           filterObj,
@@ -181,7 +184,6 @@ exports.filterOrder = async (req, res, next) => {
             receiveDate: receiveDateFilter,
           },
         ],
-        
       },
       include: {
         Supplier: {
@@ -194,3 +196,10 @@ exports.filterOrder = async (req, res, next) => {
     return next(error);
   }
 };
+exports.editOrder =  async(req,res,next)=>{
+  try {
+    res.json({message : "Edit Order reached"})
+  } catch (error) {
+    next(error)
+  }
+}
