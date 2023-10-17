@@ -181,6 +181,10 @@ exports.filterOrder = async (req, res, next) => {
     if (req.query.supplierId) {
       filterObj.supplierId = +req.query.supplierId;
     }
+    let userIdFilter = {};
+    if (req.query.userId) {
+      userIdFilter = { userId: +req.query.userId };
+    }
     if (req.query.sumPrice) {
       filterObj.sumPrice = { gt: +req.query.sumPrice };
     }
@@ -196,6 +200,7 @@ exports.filterOrder = async (req, res, next) => {
         Supplier: {
           companyId: +req.user.companyId,
         },
+        User: userIdFilter,
         AND: [
           filterObj,
           {
@@ -205,7 +210,7 @@ exports.filterOrder = async (req, res, next) => {
       },
       include: {
         Supplier: {
-          select: { companyId: true },
+          select: { supplierId: true, supplierName: true },
         },
       },
     });
