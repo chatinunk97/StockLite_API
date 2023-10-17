@@ -8,6 +8,7 @@ const {
   supervisorAuthentication,
 } = require("../middleware/authMiddleware/authSupervisorMiddleware");
 
+//Supplier
 router.post(
   "/supplier",
   authentication,
@@ -17,4 +18,8 @@ router.post(
 router.get("/supplier",authentication,supervisorAuthentication,wmsController.filterSupplier)
 router.put("/supplier",authentication,supervisorAuthentication,wmsController.editSupplier)
 router.delete("/supplier",authentication,supervisorAuthentication,wmsController.deleteSupplier)
+
+//Order
+router.post("/order",authentication,supervisorAuthentication,wmsController.createOrder)
+router.get('/order',authentication,supervisorAuthentication,wmsController.filterOrder)
 module.exports = router;

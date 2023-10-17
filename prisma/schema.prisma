@@ -47,15 +47,15 @@ model CompanyProfile {
 }
 
 model Supplier {
-  supplierId              Int             @id @default(autoincrement())
-  supplierName            String          @db.VarChar(225)
-  supplierAddress         String          @db.VarChar(225)
-  supplierTel             String          @db.VarChar(225)
-  createdAt               DateTime        @default(now())
-  updatedAt               DateTime        @updatedAt
-  orderList               OrderList[]
-  CompanyProfile          CompanyProfile? @relation(fields: [companyId], references: [companyId])
-  companyId Int
+  supplierId      Int             @id @default(autoincrement())
+  supplierName    String          @db.VarChar(225)
+  supplierAddress String          @db.VarChar(225)
+  supplierTel     String          @db.VarChar(225)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  orderList       OrderList[]
+  CompanyProfile  CompanyProfile? @relation(fields: [companyId], references: [companyId])
+  companyId       Int
 
   @@map("suppliers")
 }
@@ -63,11 +63,12 @@ model Supplier {
 model OrderList {
   orderId      Int            @id @default(autoincrement())
   receiveDate  DateTime       @default(now())
-  User         User           @relation(fields: [userUserId], references: [userId])
-  userUserId   Int
+  sumPrice     Int
+  User         User           @relation(fields: [userId], references: [userId])
+  userId       Int
   Supplier     Supplier       @relation(fields: [supplierId], references: [supplierId])
   supplierId   Int
-  produstStock ProductStock[]
+  productStock ProductStock[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 

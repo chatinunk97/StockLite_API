@@ -4,8 +4,12 @@ const {
   ValidateSupplierInput,
   ValidateSupplierFilter,
   ValidateSupplierId,
+  CheckSupplier,
+  checkStartEndDate,
 } = require("../validators/wmsValidator");
+const Joi = require("joi");
 
+/// Spplier ///
 exports.createSupplier = async (req, res, next) => {
   try {
     const data = req.body;
@@ -28,7 +32,7 @@ exports.createSupplier = async (req, res, next) => {
     const createResult = await prisma.supplier.create({
       data: value,
     });
-    res.json({  createResult });
+    res.json({ createResult });
   } catch (error) {
     next(error);
   }
@@ -63,8 +67,8 @@ exports.filterSupplier = async (req, res, next) => {
 
 exports.editSupplier = async (req, res, next) => {
   try {
-    delete req.body.createdAt
-    delete req.body.updatedAt
+    delete req.body.createdAt;
+    delete req.body.updatedAt;
     const { value, error } = ValidateSupplierInput(req.body);
     if (error) {
       return next(error);
@@ -82,7 +86,7 @@ exports.editSupplier = async (req, res, next) => {
     }
     delete value.supplierId;
     delete value.companyId;
-    console.log(existSupplier)
+    console.log(existSupplier);
     const updatedInfo = await prisma.supplier.update({
       where: { supplierId: existSupplier.supplierId },
       data: value,
@@ -115,8 +119,78 @@ exports.deleteSupplier = async (req, res, next) => {
         supplierId: deleteSupplier,
       },
     });
-    res.json({ deleteResult});
+    res.json({ deleteResult });
   } catch (error) {
     next(error);
+  }
+};
+
+// Order ///
+exports.createOrder = async (req, res, next) => {
+  try {
+    const data = req.body;
+    req.body.receiveDate = new Date(req.body.receiveDate);
+    req.body.userId = req.user.userId;
+    const existSupplier = await CheckSupplier(
+      req.user.companyId,
+      req.body.supplierId
+    );
+    if (!existSupplier) {
+      return next(createError("Supplier not found", 404));
+    }
+    const createResult = await prisma.orderList.create({
+      data,
+    });
+    res.json({ createResult });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.filterOrder = async (req, res, next) => {
+  try {
+    console.log(req.query);
+    const filterObj = { receiveDate: {} };
+    // Add Order ID manually since it's INT
+    if (req.query.orderId) {
+      filterObj.orderId = +req.query.orderId;
+    }
+    // Add Supplier ID manually since it's INT
+    if (req.query.supplierId) {
+      filterObj.supplierId = +req.query.supplierId;
+    }
+    if (req.query.sumPrice) {
+      filterObj.sumPrice = { gt: +req.query.sumPrice };
+    }
+    const receiveDateFilter = {};
+    if (req.query.startDate) {
+      receiveDateFilter.gte = new Date(req.query.startDate); // Start of date range
+    }
+    if (req.query.endDate) {
+      receiveDateFilter.lte = new Date(req.query.endDate); // Start of date range
+    }
+    console.log(receiveDateFilter);
+    console.log(filterObj);
+    const searchResult = await prisma.orderList.findMany({
+      where: {
+        Supplier : {
+          companyId : +req.user.companyId
+        },
+        AND: [
+          filterObj,
+          {
+            receiveDate: receiveDateFilter,
+          },
+        ],
+        
+      },
+      include: {
+        Supplier: {
+          select: { companyId: true },
+        },
+      },
+    });
+    res.json({ searchResult });
+  } catch (error) {
+    return next(error);
   }
 };
