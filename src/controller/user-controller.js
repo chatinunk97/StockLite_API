@@ -186,6 +186,13 @@ exports.deleteUser = async (req, res, next) => {
     });
     res.json({ message: `User : ${deleteResult.username} Deleted` });
   } catch (error) {
+    if(
+      error.message.includes(
+        "Foreign key constraint failed on the field: `userId`"
+      )
+    ){
+      return next(createError("Cannot delete user due to this user is linked to transactions such as Order , Transactions",400))
+    }
     next(error);
   }
 };
@@ -209,7 +216,6 @@ exports.editUser = async (req, res, next) => {
     await prisma.user.update({
       where: { userId: +editUser.userId },
       data: editUser,
-      
     });
     res.json({ message: "User information updated" });
   } catch (error) {

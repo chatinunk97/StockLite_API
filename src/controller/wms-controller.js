@@ -115,6 +115,25 @@ exports.deleteSupplier = async (req, res, next) => {
     if (!foundSupplier) {
       return next(createError("No supplier found", 400));
     }
+    // Check if there's a order depening on this supplier
+    const dependence = await prisma.orderList.findMany({
+      where: {
+        supplierId: deleteSupplier,
+      },
+    });
+    if (dependence) {
+      const orderId = [];
+      for (const iterator of dependence) {
+        orderId.push(iterator.orderId);
+      }
+      const orderText = orderId.join(",");
+      return next(
+        createError(
+          `Cannot delete this supplier because Order number : ${orderText} are made by this Supplier`,
+          400
+        )
+      );
+    }
     const deleteResult = await prisma.supplier.delete({
       where: {
         supplierId: deleteSupplier,
@@ -153,7 +172,6 @@ exports.createOrder = async (req, res, next) => {
 };
 exports.filterOrder = async (req, res, next) => {
   try {
-    console.log(req.query);
     const filterObj = { receiveDate: {} };
     // Add Order ID manually since it's INT
     if (req.query.orderId) {
@@ -196,10 +214,10 @@ exports.filterOrder = async (req, res, next) => {
     return next(error);
   }
 };
-exports.editOrder =  async(req,res,next)=>{
+exports.editOrder = async (req, res, next) => {
   try {
-    res.json({message : "Edit Order reached"})
+    res.json({ message: "Edit Order reached" });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
