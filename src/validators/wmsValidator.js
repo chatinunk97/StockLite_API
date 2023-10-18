@@ -24,7 +24,7 @@ const startAndEndDateSchema = Joi.object({
   startDate: Joi.date().required(),
   endDate: Joi.date().required(),
 });
-const supplierIdSchema = Joi.number().max(100).label("Supplier Id");
+const wmsIdSchema = Joi.number().max(100).label("Supplier Id");
 
 const createOrderSchema = Joi.object({
   supplierId: Joi.number().required(),
@@ -39,8 +39,8 @@ exports.ValidateSupplierInput = (input) => {
 exports.ValidateSupplierFilter = (input) => {
   return supplierFilterSchema.validate(input);
 };
-exports.ValidateSupplierId = (input) => {
-  return supplierIdSchema.validate(input);
+exports.ValidateIds = (input) => {
+  return wmsIdSchema.validate(input);
 };
 exports.CheckSupplier = async (companyId, supplierId) => {
   const existSupplier = await prisma.supplier.findFirst({
@@ -48,6 +48,12 @@ exports.CheckSupplier = async (companyId, supplierId) => {
   });
   return existSupplier;
 };
+exports.ChecExistOrder = async (orderId)=>{
+  const existOrder = await prisma.orderList.findFirst({
+    where : { orderId : orderId}
+  })
+  return existOrder
+}
 exports.checkStartEndDate = (input) => {
   return startAndEndDateSchema.validate(input);
 };

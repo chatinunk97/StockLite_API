@@ -3,10 +3,10 @@ const createError = require("../utils/createError");
 const {
   ValidateSupplierInput,
   ValidateSupplierFilter,
-  ValidateSupplierId,
+  ValidateIds,
   CheckSupplier,
-  checkStartEndDate,
   checkCreateOrder,
+  ChecExistOrder,
 } = require("../validators/wmsValidator");
 const Joi = require("joi");
 
@@ -100,7 +100,7 @@ exports.editSupplier = async (req, res, next) => {
 
 exports.deleteSupplier = async (req, res, next) => {
   try {
-    const { value, error } = ValidateSupplierId(req.query.supplierId);
+    const { value, error } = ValidateIds(req.query.supplierId);
     if (error) {
       return next(error);
     }
@@ -181,9 +181,10 @@ exports.filterOrder = async (req, res, next) => {
     if (req.query.supplierId) {
       filterObj.supplierId = +req.query.supplierId;
     }
-    let userIdFilter = {};
-    if (req.query.userId) {
-      userIdFilter = { userId: +req.query.userId };
+    let usernameFilter = {};
+    if (req.query.username) {
+      usernameFilter = { username: { startsWith: "%" + req.query.username } };
+      console.log(usernameFilter);
     }
     if (req.query.sumPrice) {
       filterObj.sumPrice = { gt: +req.query.sumPrice };
@@ -200,7 +201,7 @@ exports.filterOrder = async (req, res, next) => {
         Supplier: {
           companyId: +req.user.companyId,
         },
-        User: userIdFilter,
+        User: usernameFilter,
         AND: [
           filterObj,
           {
@@ -212,6 +213,7 @@ exports.filterOrder = async (req, res, next) => {
         Supplier: {
           select: { supplierId: true, supplierName: true },
         },
+        User: { select: { username: true } },
       },
     });
     res.json({ searchResult });
@@ -222,6 +224,24 @@ exports.filterOrder = async (req, res, next) => {
 exports.editOrder = async (req, res, next) => {
   try {
     res.json({ message: "Edit Order reached" });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.deleteOrder = async (req, res, next) => {
+  try {
+    const { value, error } = ValidateIds(req.query.orderId);
+    if (error) {
+      return next(error);
+    }
+    const deleteOrder = await ChecExistOrder(value);
+    if (!deleteOrder) {
+      return next(createError("No order found", 400));
+    }
+    const deletedOrder = await prisma.orderList.delete({
+      where: { orderId: deleteOrder.orderId },
+    });
+    res.json({ deletedOrder });
   } catch (error) {
     next(error);
   }

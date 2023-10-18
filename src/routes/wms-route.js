@@ -22,6 +22,7 @@ router.delete("/supplier",authentication,supervisorAuthentication,wmsController.
 //Order
 router.post("/order",authentication,supervisorAuthentication,wmsController.createOrder)
 router.get('/order',authentication,supervisorAuthentication,wmsController.filterOrder)
+router.delete('/order',authentication,supervisorAuthentication,wmsController.deleteOrder)
 
 
 
