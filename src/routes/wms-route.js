@@ -27,6 +27,7 @@ router.patch('/order',authentication,supervisorAuthentication,wmsController.edit
 
 //Stock
 router.post("/stock" ,authentication,supervisorAuthentication,wmsController.createStock)
+router.get("/stock" ,authentication,supervisorAuthentication,wmsController.filterStock)
 
 
 module.exports = router;

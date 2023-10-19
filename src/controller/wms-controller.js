@@ -8,6 +8,7 @@ const {
   checkCreateOrder,
   ChecExistOrder,
   checkEditOrder,
+  checkCreateStock,
 } = require("../validators/wmsValidator");
 
 /// Spplier ///
@@ -122,7 +123,7 @@ exports.deleteSupplier = async (req, res, next) => {
       },
     });
     if (dependence.length) {
-      console.log(dependence)
+      console.log(dependence);
       const orderId = [];
       for (const iterator of dependence) {
         orderId.push(iterator.orderId);
@@ -185,7 +186,6 @@ exports.filterOrder = async (req, res, next) => {
     let usernameFilter = {};
     if (req.query.username) {
       usernameFilter = { username: { startsWith: "%" + req.query.username } };
-      console.log(usernameFilter);
     }
     if (req.query.sumPrice) {
       filterObj.sumPrice = { gt: +req.query.sumPrice };
@@ -274,12 +274,58 @@ exports.deleteOrder = async (req, res, next) => {
   }
 };
 
-//Stock 1 Order has many stock//
-exports.createStock = async(req,res,next)=>{
+//Stock   #note 1 Order has many stock//
+exports.createStock = async (req, res, next) => {
   try {
-    console.log(req.body)
-    res.json({message : " Create stock reached"})
+    const { value, error } = checkCreateStock(req.body);
+    if (error) {
+      return next(error);
+    }
+    if (!value.expirationDate) {
+      delete value.expirationDate;
+    }
+    const checkOrderValid = await prisma.orderList.findFirst({
+      where: {
+        AND: [
+          { Supplier: { companyId: +req.user.companyId } },
+          { orderId: value.orderId },
+        ],
+      },
+    });
+    if (!checkOrderValid) {
+      return next(createError("No orderID found", 400));
+    }
+    const existStock = await prisma.productStock.findFirst({
+      where: {
+        AND: [{ orderId: value.orderId }, { productName: value.productName }],
+      },
+    });
+    if (existStock) {
+      return next(
+        createError(
+          `There's already stock with name ${value.productName} for Order Number ${value.orderId}`
+        )
+      );
+    }
+    const createResult = await prisma.productStock.create({
+      data: value,
+    });
+    return res.json({ createResult });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
+exports.filterStock = async (req, res, next) => {
+  try {
+    console.log(req.query);
+
+    const result = await prisma.productStock.findMany({
+      where: {
+        AND: [{ OrderList: { Supplier: { companyId: +req.user.companyId } } }],
+      },
+    });
+    res.json({ result });
+  } catch (error) {
+    next(error);
+  }
+};
