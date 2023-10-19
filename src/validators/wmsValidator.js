@@ -1,6 +1,5 @@
 const Joi = require("joi");
 const prisma = require("../models/prisma");
-const { USER_SUPERVISOR } = require("../config/constrants");
 
 const supplierCreateSchema = Joi.object({
   supplierId: Joi.number().max(100).allow(null, "").label("Supplier ID"),
@@ -29,9 +28,14 @@ const wmsIdSchema = Joi.number().max(100).label("Supplier Id");
 const createOrderSchema = Joi.object({
   supplierId: Joi.number().required(),
   sumPrice: Joi.number().required(),
-  receiveDate: Joi.date().allow(null, ""),
+  receiveDate: Joi.date(),
   userId : Joi.number().required()
 });
+const editOrderSchema = Joi.object({
+  orderId : Joi.number().required(),
+  sumPrice : Joi.number().required(),
+  receiveDate : Joi.date().required()
+})
 
 exports.ValidateSupplierInput = (input) => {
   return supplierCreateSchema.validate(input);
@@ -60,3 +64,7 @@ exports.checkStartEndDate = (input) => {
 exports.checkCreateOrder = (input) => {
   return createOrderSchema.validate(input);
 };
+
+exports.checkEditOrder = (input)=>{
+  return editOrderSchema.validate(input)
+}

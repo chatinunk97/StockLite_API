@@ -7,8 +7,8 @@ const {
   CheckSupplier,
   checkCreateOrder,
   ChecExistOrder,
+  checkEditOrder,
 } = require("../validators/wmsValidator");
-const Joi = require("joi");
 
 /// Spplier ///
 exports.createSupplier = async (req, res, next) => {
@@ -121,7 +121,8 @@ exports.deleteSupplier = async (req, res, next) => {
         supplierId: deleteSupplier,
       },
     });
-    if (dependence) {
+    if (dependence.length) {
+      console.log(dependence)
       const orderId = [];
       for (const iterator of dependence) {
         orderId.push(iterator.orderId);
@@ -209,6 +210,9 @@ exports.filterOrder = async (req, res, next) => {
           },
         ],
       },
+      orderBy: {
+        orderId: "desc",
+      },
       include: {
         Supplier: {
           select: { supplierId: true, supplierName: true },
@@ -223,7 +227,30 @@ exports.filterOrder = async (req, res, next) => {
 };
 exports.editOrder = async (req, res, next) => {
   try {
-    res.json({ message: "Edit Order reached" });
+    const editData = {};
+    const { orderId, sumPrice, receiveDate } = req.body;
+    editData.orderId = orderId;
+    editData.sumPrice = sumPrice;
+    editData.receiveDate = receiveDate;
+    const { value, error } = checkEditOrder(editData);
+    if (error) {
+      return next(error);
+    }
+    const existOrder = await prisma.orderList.findFirst({
+      where: { orderId: value.orderId },
+    });
+    if (!existOrder) {
+      return next(createError("no order found", 400));
+    }
+    const newOrderData = { ...existOrder, ...value };
+    const editResult = await prisma.orderList.update({
+      where: {
+        orderId: newOrderData.orderId,
+      },
+      data: newOrderData,
+    });
+    console.log(editResult);
+    res.json({ editResult });
   } catch (error) {
     next(error);
   }
@@ -246,3 +273,13 @@ exports.deleteOrder = async (req, res, next) => {
     next(error);
   }
 };
+
+//Stock 1 Order has many stock//
+exports.createStock = async(req,res,next)=>{
+  try {
+    console.log(req.body)
+    res.json({message : " Create stock reached"})
+  } catch (error) {
+    next(error)
+  }
+}

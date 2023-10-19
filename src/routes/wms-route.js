@@ -23,7 +23,10 @@ router.delete("/supplier",authentication,supervisorAuthentication,wmsController.
 router.post("/order",authentication,supervisorAuthentication,wmsController.createOrder)
 router.get('/order',authentication,supervisorAuthentication,wmsController.filterOrder)
 router.delete('/order',authentication,supervisorAuthentication,wmsController.deleteOrder)
+router.patch('/order',authentication,supervisorAuthentication,wmsController.editOrder)
 
+//Stock
+router.post("/stock" ,authentication,supervisorAuthentication,wmsController.createStock)
 
 
 module.exports = router;
