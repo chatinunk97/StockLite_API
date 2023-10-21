@@ -317,11 +317,16 @@ exports.createStock = async (req, res, next) => {
 };
 exports.filterStock = async (req, res, next) => {
   try {
-    console.log(req.query);
-
     const result = await prisma.productStock.findMany({
       where: {
         AND: [{ OrderList: { Supplier: { companyId: +req.user.companyId } } }],
+      },
+      include: {
+        OrderList: {
+          select: {
+            Supplier: { select: { supplierId: true, supplierName: true } },
+          },
+        },
       },
     });
     res.json({ result });
