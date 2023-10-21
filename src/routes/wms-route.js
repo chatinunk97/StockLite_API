@@ -28,6 +28,8 @@ router.patch('/order',authentication,supervisorAuthentication,wmsController.edit
 //Stock
 router.post("/stock" ,authentication,supervisorAuthentication,wmsController.createStock)
 router.get("/stock" ,authentication,supervisorAuthentication,wmsController.filterStock)
+router.delete("/stock" ,authentication,supervisorAuthentication,wmsController.deleteStock)
+router.patch("/stock" ,authentication,supervisorAuthentication,wmsController.editStock)
 
 
 module.exports = router;

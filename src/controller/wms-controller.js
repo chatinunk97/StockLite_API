@@ -9,6 +9,10 @@ const {
   ChecExistOrder,
   checkEditOrder,
   checkCreateStock,
+  checkOrderFilter,
+  checkStockFilter,
+  checkExistStock,
+  checkStockEdit,
 } = require("../validators/wmsValidator");
 
 /// Spplier ///
@@ -123,7 +127,6 @@ exports.deleteSupplier = async (req, res, next) => {
       },
     });
     if (dependence.length) {
-      console.log(dependence);
       const orderId = [];
       for (const iterator of dependence) {
         orderId.push(iterator.orderId);
@@ -174,6 +177,10 @@ exports.createOrder = async (req, res, next) => {
 };
 exports.filterOrder = async (req, res, next) => {
   try {
+    const { value, error } = checkOrderFilter(req.query);
+    if (error) {
+      return next(error);
+    }
     const filterObj = { receiveDate: {} };
     // Add Order ID manually since it's INT
     if (req.query.orderId) {
@@ -195,7 +202,7 @@ exports.filterOrder = async (req, res, next) => {
       receiveDateFilter.gte = new Date(req.query.startDate); // Start of date range
     }
     if (req.query.endDate) {
-      receiveDateFilter.lte = new Date(req.query.endDate); // Start of date range
+      receiveDateFilter.lte = new Date(req.query.endDate); // End of date range
     }
     const searchResult = await prisma.orderList.findMany({
       where: {
@@ -232,6 +239,7 @@ exports.editOrder = async (req, res, next) => {
     editData.orderId = orderId;
     editData.sumPrice = sumPrice;
     editData.receiveDate = receiveDate;
+
     const { value, error } = checkEditOrder(editData);
     if (error) {
       return next(error);
@@ -242,6 +250,12 @@ exports.editOrder = async (req, res, next) => {
     if (!existOrder) {
       return next(createError("no order found", 400));
     }
+
+    for( i in value){
+      if(!value[i]){
+        delete value[i]
+      }
+    }
     const newOrderData = { ...existOrder, ...value };
     const editResult = await prisma.orderList.update({
       where: {
@@ -249,7 +263,6 @@ exports.editOrder = async (req, res, next) => {
       },
       data: newOrderData,
     });
-    console.log(editResult);
     res.json({ editResult });
   } catch (error) {
     next(error);
@@ -277,6 +290,7 @@ exports.deleteOrder = async (req, res, next) => {
 //Stock   #note 1 Order has many stock//
 exports.createStock = async (req, res, next) => {
   try {
+    console.log(req.body);
     const { value, error } = checkCreateStock(req.body);
     if (error) {
       return next(error);
@@ -317,9 +331,40 @@ exports.createStock = async (req, res, next) => {
 };
 exports.filterStock = async (req, res, next) => {
   try {
+    const { value, error } = checkStockFilter(req.query);
+    if (error) {
+      return next(error);
+    }
+    const filterObj = {};
+
+    // Validate INT input
+    if (value.stockId) {
+      filterObj.stockId = value.stockId;
+    }
+    if (value.stockQuantity) {
+      filterObj.stockQuantity = { gt: value.stockQuantity - 1 };
+    }
+    if (value.pricePerUnit) {
+      filterObj.pricePerUnit = { gt: value.pricePerUnit - 1 };
+    }
+    if (value.productName) {
+      filterObj.productName = { startsWith: "%" + value.productName };
+    }
+    if (value.supplierName) {
+      filterObj.OrderList = {
+        Supplier: { supplierName: { startsWith: "%" + value.supplierName } },
+      };
+    }
+    if (value.expirationDate) {
+      filterObj.expirationDate = { lt: value.expirationDate };
+    }
+
     const result = await prisma.productStock.findMany({
       where: {
-        AND: [{ OrderList: { Supplier: { companyId: +req.user.companyId } } }],
+        AND: [
+          filterObj,
+          { OrderList: { Supplier: { companyId: +req.user.companyId } } },
+        ],
       },
       include: {
         OrderList: {
@@ -330,6 +375,69 @@ exports.filterStock = async (req, res, next) => {
       },
     });
     res.json({ result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteStock = async (req, res, next) => {
+  try {
+    const { value, error } = ValidateIds(req.query.stockId);
+    if (error) {
+      return next(error);
+    }
+    const deleteStock = await checkExistStock(value);
+    if (!deleteStock) {
+      return next(createError("No stock found", 400));
+    }
+    const deletedStock = await prisma.productStock.delete({
+      where: { stockId: value },
+    });
+    res.json({ deletedStock });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.editStock = async (req, res, next) => {
+  try {
+    const editData = {};
+    const {
+      stockId,
+      productName,
+      stockQuantity,
+      pricePerUnit,
+      expirationDate,
+    } = req.body;
+    editData.stockId = stockId;
+    editData.productName = productName;
+    editData.stockQuantity = stockQuantity;
+    editData.pricePerUnit = pricePerUnit;
+    editData.expirationDate = expirationDate;
+    const { value, error } = checkStockEdit(editData);
+    if (error) {
+      return next(error);
+    }
+    console.log(value)
+    const existStock = await prisma.productStock.findFirst({
+      where: { stockId: value.stockId },
+    });
+    if (!existStock) {
+      return next(createError("no stock found", 400));
+    }
+    for( i in value){
+      if(!value[i]){
+        delete value[i]
+      }
+    }
+    const newStockData = { ...existStock, ...value };
+    const editResult = await prisma.productStock.update({
+      where: {
+        stockId: newStockData.stockId,
+      },
+      data: newStockData,
+    });
+
+    res.json({ editResult});
   } catch (error) {
     next(error);
   }

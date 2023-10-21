@@ -23,26 +23,56 @@ const startAndEndDateSchema = Joi.object({
   startDate: Joi.date().required(),
   endDate: Joi.date().required(),
 });
-const wmsIdSchema = Joi.number().max(100).label("Supplier Id");
+const wmsIdSchema = Joi.number().max(100);
 
 const createOrderSchema = Joi.object({
   supplierId: Joi.number().required(),
   sumPrice: Joi.number().required(),
-  receiveDate: Joi.date(),
+  receiveDate: Joi.date().label("Receive Date"),
   userId: Joi.number().required(),
 });
 const editOrderSchema = Joi.object({
   orderId: Joi.number().required(),
   sumPrice: Joi.number().required(),
-  receiveDate: Joi.date().required(),
+  receiveDate: Joi.date().allow("",null),
 });
 const createStockSchema = Joi.object({
   orderId: Joi.number().required(),
   productName: Joi.string().max(100).required(),
   stockQuantity: Joi.number().required(),
   pricePerUnit: Joi.number().required(),
-  expirationDate : Joi.date().allow(null,"")
+  expirationDate: Joi.date().allow(null, ""),
 });
+
+const orderFilterSchema = Joi.object({
+  orderId: Joi.number().allow(null, ""),
+  supplierId: Joi.number().allow(null, ""),
+  sumPrice: Joi.number().allow(null, "").label("Total Expense"),
+  startDate: Joi.date().allow(null, "").label("Date From"),
+  endDate: Joi.date().allow(null, "").label("Date Until"),
+  username: Joi.string().allow(null, ""),
+});
+
+const stockFilterSchema = Joi.object({
+  stockId: Joi.number().allow(null, ""),
+  orderId: Joi.number().allow(null, ""),
+  supplierName: Joi.string().allow(null, ""),
+  productName: Joi.string().allow(null, ""),
+  stockQuantity: Joi.number().allow(null, ""),
+  pricePerUnit: Joi.number().allow(null, ""),
+  expirationDate: Joi.date().allow(null, "").label("EXP Date"),
+});
+
+const stockEditSchema = Joi.object({
+  stockId: Joi.number().allow(null, ""),
+  productName: Joi.string().allow(null, ""),
+  stockQuantity: Joi.number().allow(null, ""),
+  pricePerUnit: Joi.number().allow(null, ""),
+  expirationDate: Joi.date().allow(null, "").label("EXP Date"),
+});
+
+
+
 
 exports.ValidateSupplierInput = (input) => {
   return supplierCreateSchema.validate(input);
@@ -65,6 +95,12 @@ exports.ChecExistOrder = async (orderId) => {
   });
   return existOrder;
 };
+exports.checkExistStock = async (stockId) => {
+  const existOrder = await prisma.productStock.findFirst({
+    where: { stockId: stockId },
+  });
+  return existOrder;
+};
 exports.checkStartEndDate = (input) => {
   return startAndEndDateSchema.validate(input);
 };
@@ -75,6 +111,18 @@ exports.checkCreateOrder = (input) => {
 exports.checkEditOrder = (input) => {
   return editOrderSchema.validate(input);
 };
-exports.checkCreateStock = (input)=>{
-  return createStockSchema.validate(input)
+exports.checkCreateStock = (input) => {
+  return createStockSchema.validate(input);
+};
+
+exports.checkOrderFilter = (input) => {
+  return orderFilterSchema.validate(input);
+};
+
+exports.checkStockFilter = (input) => {
+  return stockFilterSchema.validate(input);
+};
+
+exports.checkStockEdit = (input)=>{
+  return stockEditSchema.validate(input)
 }
