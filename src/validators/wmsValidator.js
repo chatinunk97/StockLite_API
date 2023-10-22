@@ -2,28 +2,28 @@ const Joi = require("joi");
 const prisma = require("../models/prisma");
 
 const supplierCreateSchema = Joi.object({
-  supplierId: Joi.number().max(100).allow(null, "").label("Supplier ID"),
+  supplierId: Joi.number().allow(null, "").label("Supplier ID"),
   supplierName: Joi.string().max(100).label("Supplier Name").required(),
   supplierAddress: Joi.string().max(225).label("Supplier Address").required(),
   supplierTel: Joi.string().max(225).label("Supplier Tel").required(),
-  companyId: Joi.number().max(100).required(),
+  companyId: Joi.number().required(),
 });
 
 const supplierFilterSchema = Joi.object({
-  supplierId: Joi.number().max(100).allow(null, "").label("Supplier ID"),
+  supplierId: Joi.number().allow(null, "").label("Supplier ID"),
   supplierName: Joi.string().max(100).allow(null, "").label("Supplier Name"),
   supplierAddress: Joi.string()
     .max(225)
     .allow(null, "")
     .label("Supplier Address"),
   supplierTel: Joi.string().max(225).allow(null, "").label("Supplier Tel"),
-  companyId: Joi.number().max(100).allow(null, ""),
+  companyId: Joi.number().allow(null, ""),
 });
 const startAndEndDateSchema = Joi.object({
   startDate: Joi.date().required(),
   endDate: Joi.date().required(),
 });
-const wmsIdSchema = Joi.number().max(100);
+const wmsIdSchema = Joi.number();
 
 const createOrderSchema = Joi.object({
   supplierId: Joi.number().required(),
@@ -71,9 +71,19 @@ const stockEditSchema = Joi.object({
   expirationDate: Joi.date().allow(null, "").label("EXP Date"),
 });
 
+const shelfAddCountSchema = Joi.object({
+  shelfItemId : Joi.number().required(),
+  shelfAddQuantity : Joi.number().required()
+})
 
-
-
+const shelfFilterSchema = Joi.object({
+  shelfItemId: Joi.number().allow(null, ""),
+  stockId: Joi.number().allow(null, ""),
+  shelfQuantity: Joi.number().allow(null, ""),
+  stockQuantity: Joi.number().allow(null, ""),
+  expirationDate: Joi.date().allow(null, "").label("EXP Date"),
+  productName : Joi.string().allow(null, ""),
+})
 exports.ValidateSupplierInput = (input) => {
   return supplierCreateSchema.validate(input);
 };
@@ -126,3 +136,16 @@ exports.checkStockFilter = (input) => {
 exports.checkStockEdit = (input)=>{
   return stockEditSchema.validate(input)
 }
+
+exports.checkShelfAdd = (input)=>{
+  return shelfAddCountSchema.validate(input)
+}
+exports.checkShelfFilter = (input)=>{
+  return shelfFilterSchema.validate(input)
+}
+exports.CheckExistShelf = async (shelfItemId) => {
+  const existShelf = await prisma.productShelf.findFirst({
+    where: { shelfItemId: shelfItemId },
+  });
+  return existShelf;
+};

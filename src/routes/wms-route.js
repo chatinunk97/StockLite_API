@@ -30,6 +30,11 @@ router.post("/stock" ,authentication,supervisorAuthentication,wmsController.crea
 router.get("/stock" ,authentication,supervisorAuthentication,wmsController.filterStock)
 router.delete("/stock" ,authentication,supervisorAuthentication,wmsController.deleteStock)
 router.patch("/stock" ,authentication,supervisorAuthentication,wmsController.editStock)
-
+ 
+//Shelf
+router.post("/shelf" ,authentication,supervisorAuthentication,wmsController.createShelf)
+router.patch("/shelf" ,authentication,supervisorAuthentication,wmsController.addShelfCount)
+router.get("/shelf" ,authentication,supervisorAuthentication,wmsController.filterShelf)
+router.delete("/shelf" ,authentication,supervisorAuthentication,wmsController.deleteShelf)
 
 module.exports = router;

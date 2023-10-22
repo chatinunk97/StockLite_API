@@ -13,6 +13,9 @@ const {
   checkStockFilter,
   checkExistStock,
   checkStockEdit,
+  checkShelfAdd,
+  checkShelfFilter,
+  CheckExistShelf,
 } = require("../validators/wmsValidator");
 
 /// Spplier ///
@@ -251,9 +254,9 @@ exports.editOrder = async (req, res, next) => {
       return next(createError("no order found", 400));
     }
 
-    for( i in value){
-      if(!value[i]){
-        delete value[i]
+    for (i in value) {
+      if (!value[i]) {
+        delete value[i];
       }
     }
     const newOrderData = { ...existOrder, ...value };
@@ -417,16 +420,16 @@ exports.editStock = async (req, res, next) => {
     if (error) {
       return next(error);
     }
-    console.log(value)
+    console.log(value);
     const existStock = await prisma.productStock.findFirst({
       where: { stockId: value.stockId },
     });
     if (!existStock) {
       return next(createError("no stock found", 400));
     }
-    for( i in value){
-      if(!value[i]){
-        delete value[i]
+    for (i in value) {
+      if (!value[i]) {
+        delete value[i];
       }
     }
     const newStockData = { ...existStock, ...value };
@@ -437,7 +440,173 @@ exports.editStock = async (req, res, next) => {
       data: newStockData,
     });
 
-    res.json({ editResult});
+    res.json({ editResult });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//Shelf # note 1 Stock to 1 Shelf
+exports.createShelf = async (req, res, next) => {
+  try {
+    console.log(req.body)
+    const { value, error } = ValidateIds(req.body.stockId);
+    if (error) {
+      return next(error);
+    }
+    console.log(value,error)
+    const existingStock = await prisma.productStock.findFirst({
+      where: { stockId: value },
+    });
+    if (!existingStock) {
+      return next(createError("No stock found", 400));
+    }
+    const existingShelf = await prisma.productShelf.findFirst({
+      where: { stockId: value },
+    });
+    if (existingShelf) {
+      return next(
+        createError(
+          "The stock already has a shelf record please check again",
+          400
+        )
+      );
+    }
+    const createResult = await prisma.productShelf.create({
+      data: {
+        stockId: value,
+      },
+    });
+    res.json({createResult});
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.addShelfCount = async (req, res, next) => {
+  try {
+    const { value, error } = checkShelfAdd(req.body);
+    if (error) {
+      return next(error);
+    }
+    if (!value.shelfAddQuantity || value.shelfAddQuantity < 0) {
+      return next(createError("Please input a number more than 0"));
+    }
+    const existingShelf = await prisma.productShelf.findFirst({
+      where: { shelfItemId: value.shelfItemId },
+    });
+    if (!existingShelf) {
+      return next(createError("No shelf Found "));
+    }
+    const existingStock = await prisma.productStock.findFirst({
+      where: { stockId: existingShelf.stockId },
+    });
+    if (!existingStock) {
+      return next(createError("No stock Found "));
+    }
+
+    //Add to shelf and subtract from stock
+    if (existingStock.stockQuantity < value.shelfAddQuantity) {
+      return next(createError("Insufficient Stock quantity", 400));
+    }
+    const updatedResult = await prisma.productShelf.update({
+      where: { shelfItemId: existingShelf.shelfItemId },
+      data: {
+        shelfQuantity: existingShelf.shelfQuantity + value.shelfAddQuantity,
+      },
+    });
+    const updatedStock = await prisma.productStock.update({
+      where: { stockId: existingStock.stockId },
+      data: {
+        stockQuantity: existingStock.stockQuantity - value.shelfAddQuantity,
+        refillCount: ++existingStock.refillCount,
+      },
+    });
+    res.json({ updatedResult, updatedStock });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.filterShelf = async (req, res, next) => {
+  try {
+    const { value, error } = checkShelfFilter(req.query);
+    if (error) {
+      return next(error);
+    }
+    //Filter for productStock table
+    const filterStockObj = {};
+    if (value.productName) {
+      filterStockObj.productName = { startsWith: "%" + value.productName };
+    }
+    if(value.stockQuantity){
+      filterStockObj.stockQuantity = { gt: value.stockQuantity - 1 };
+    }
+    if (value.expirationDate) {
+      filterStockObj.expirationDate = { lt: value.expirationDate };
+    }
+
+    //Filter for productShelf table
+    const filterShelfObj = {}
+    if(value.shelfItemId){
+      
+      filterShelfObj.shelfItemId = value.shelfItemId
+    }
+    if(value.stockId){
+      filterShelfObj.stockId = value.stockId
+    }
+    if(value.shelfQuantity){
+      filterShelfObj.shelfQuantity = { gt: value.shelfQuantity - 1 }
+    }
+    console.log(filterShelfObj)
+    console.log(filterStockObj)
+    const searchResult = await prisma.productShelf.findMany({
+      where: {
+        AND: [
+          filterShelfObj,
+          {
+            productStock: {
+              AND: [
+                filterStockObj,
+                {
+                  OrderList: { Supplier: { companyId: +req.user.companyId } },
+                },
+              ],
+            },
+          },
+        ],
+      },
+      include: {
+        productStock: {
+          select: {
+            productName: true,
+            stockQuantity: true,
+            expirationDate: true,
+            pricePerUnit: true,
+          },
+        },
+      },
+      orderBy : {shelfItemId : "desc"}
+    });
+    res.json({ searchResult });
+  } catch (error) {
+    next(error);
+  }
+};
+exports.deleteShelf = async (req, res, next) => {
+  try {
+    const { value, error } = ValidateIds(req.query.shelfItemId);
+    if (error) {
+      return next(error);
+    }
+    const deleteShelf = await CheckExistShelf(value);
+    if (!deleteShelf) {
+      return next(createError("No shelf found", 400));
+    }
+
+    const deletedShelf = await prisma.productShelf.delete({
+      where: { shelfItemId: value },
+    });
+    res.json({ deletedShelf });
   } catch (error) {
     next(error);
   }
