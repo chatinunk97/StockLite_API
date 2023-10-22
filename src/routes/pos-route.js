@@ -1,8 +1,11 @@
-const express = require('express')
-const router = express.Router()
+const express = require("express");
+const router = express.Router();
+const userController = require("../controller/pos-controller");
+const {
+  authentication,
+} = require("../middleware/authMiddleware/authMiddleware");
 
-router.get('/',(req,res,next)=>{
-    res.json({message : "POS reached"})
-})
+router.post("/transaction", authentication,userController.createTransaction);
+router.get("/transaction", authentication,userController.getTransaction);
 
-module.exports = router
+module.exports = router;

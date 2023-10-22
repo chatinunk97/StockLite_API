@@ -92,24 +92,38 @@ model ProductStock {
 }
 
 model ProductShelf {
-  shelfItemId  Int           @id @default(autoincrement())
-  productStock ProductStock  @relation(fields: [stockId], references: [stockId])
-  shelfQuantity   Int?
-  stockId      Int
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  transactions Transaction[]
+  shelfItemId               Int                         @id @default(autoincrement())
+  productStock              ProductStock                @relation(fields: [stockId], references: [stockId])
+  shelfQuantity             Int?
+  stockId                   Int
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  transactions              Transaction[]
+  TransactionToProductShelf TransactionToProductShelf[]
 
   @@map("shelves")
 }
 
 model Transaction {
-  transactionId Int            @id @default(autoincrement())
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  User          User           @relation(fields: [userId], references: [userId])
-  userId        Int
-  shelves       ProductShelf[]
+  transactionId             Int                         @id @default(autoincrement())
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  User                      User                        @relation(fields: [userId], references: [userId])
+  userId                    Int
+  transactionToProductShelf TransactionToProductShelf[]
+  ProductShelf              ProductShelf?               @relation(fields: [productShelfShelfItemId], references: [shelfItemId])
+  productShelfShelfItemId   Int?
 
   @@map("transactions")
+}
+
+model TransactionToProductShelf {
+  id             Int          @id @default(autoincrement())
+  quantity       Int
+  productShelf   ProductShelf @relation(fields: [productShelfId], references: [shelfItemId])
+  productShelfId Int
+  transaction    Transaction  @relation(fields: [transactionId], references: [transactionId])
+  transactionId  Int
+
+  @@map("transaction_to_product_shelf")
 }
