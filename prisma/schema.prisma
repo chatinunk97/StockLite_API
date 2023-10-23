@@ -28,6 +28,7 @@ model User {
   updatedAt      DateTime       @updatedAt
   CompanyProfile CompanyProfile @relation(fields: [companyId], references: [companyId])
   companyId      Int
+  isDisable      Boolean        @default(true)
   transaction    Transaction[]
   orderList      OrderList[]
 
@@ -111,7 +112,6 @@ model Transaction {
   userId                    Int
   sumSale                   Int?
   transactionToProductShelf TransactionToProductShelf[]
-
 
   @@map("transactions")
 }
