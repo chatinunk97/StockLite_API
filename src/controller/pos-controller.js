@@ -8,25 +8,25 @@ const {
 
 exports.createTransaction = async (req, res, next) => {
   try {
-    if (!(await checkExistingShelf(req.body))) {
+    if (!(await checkExistingShelf(req.body.item))) {
       return next(createError("One or more shelf was not found", 400));
     }
-    if (!(await checkQuantityNum(req.body))) {
+    if (!(await checkQuantityNum(req.body.item))) {
       return next(createError("Invalid Number was input in to Quantity", 400));
     }
     //Change quantity to number
-    for (el of req.body) {
+    for (el of req.body.item) {
       el.quantity = +el.quantity;
     }
 
     //check quantity sufficient
-    if (!(await checkQuantitySufficient(req.body))) {
+    if (!(await checkQuantitySufficient(req.body.item))) {
       return next(createError("Insuffecient shelf quantity", 400));
     }
     const inputData = {
-      userId: +req.user.userId,
+      userId: +req.user.userId,sumSale : +req.body.sumPrice,
       transactionToProductShelf: {
-        create: req.body,
+        create: req.body.item,
       },
     };
 
@@ -42,7 +42,7 @@ exports.createTransaction = async (req, res, next) => {
     });
 
     //Subtract from the shelf quantity
-    for (el of req.body) {
+    for (el of req.body.item) {
       await prisma.productShelf.update({
         where: { shelfItemId: +el.productShelf.connect.shelfItemId },
         data: { shelfQuantity: { decrement: +el.quantity } },

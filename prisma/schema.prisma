@@ -98,7 +98,6 @@ model ProductShelf {
   stockId                   Int
   createdAt                 DateTime                    @default(now())
   updatedAt                 DateTime                    @updatedAt
-  transactions              Transaction[]
   TransactionToProductShelf TransactionToProductShelf[]
 
   @@map("shelves")
@@ -110,9 +109,9 @@ model Transaction {
   updatedAt                 DateTime                    @updatedAt
   User                      User                        @relation(fields: [userId], references: [userId])
   userId                    Int
+  sumSale                   Int?
   transactionToProductShelf TransactionToProductShelf[]
-  ProductShelf              ProductShelf?               @relation(fields: [productShelfShelfItemId], references: [shelfItemId])
-  productShelfShelfItemId   Int?
+
 
   @@map("transactions")
 }
