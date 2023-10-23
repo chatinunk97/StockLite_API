@@ -1,7 +1,5 @@
 const Joi = require("joi");
 const prisma = require("../models/prisma");
-const { USER_SUPERVISOR, USER_EMPLOYEE } = require("../config/constrants");
-
 const numberSchema = Joi.number();
 
 exports.checkExistingShelf = async (arr) => {
@@ -39,3 +37,15 @@ exports.checkQuantitySufficient = async (arr) => {
   }
   return true;
 };
+const shelfFilterSchema = Joi.object({
+  shelfItemId: Joi.number().allow(null, ""),
+  stockId: Joi.number().allow(null, ""),
+  shelfQuantity: Joi.number().allow(null, ""),
+  stockQuantity: Joi.number().allow(null, ""),
+  expirationDate: Joi.date().allow(null, "").label("EXP Date"),
+  productName : Joi.string().allow(null, ""),
+})
+
+exports.checkShelfFilter = (input)=>{
+  return shelfFilterSchema.validate(input)
+}

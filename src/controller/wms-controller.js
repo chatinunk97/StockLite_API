@@ -592,6 +592,7 @@ exports.filterShelf = async (req, res, next) => {
     next(error);
   }
 };
+
 exports.deleteShelf = async (req, res, next) => {
   try {
     const { value, error } = ValidateIds(req.query.shelfItemId);
