@@ -24,6 +24,7 @@ router.get(
 );
 router.delete("/user",authentication,adminAuthentication,userController.deleteUser)
 router.patch("/user",authentication,adminAuthentication,userController.editUser)
+router.get("/sales" , authentication,adminAuthentication,userController.getSales)
 
 // This one is for nutural use to get LoginUser state
 router.get("/user", authentication, userController.getUser);

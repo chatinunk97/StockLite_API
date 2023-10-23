@@ -74,6 +74,14 @@ exports.login = async (req, res, next) => {
       { expiresIn: process.env.JWT_EXPIRE }
     );
     delete existUser.password;
+    if (!existUser.active) {
+      return next(
+        createError(
+          "Your account is deactivated please contact your Admin",
+          400
+        )
+      );
+    }
     res.json({ accessToken: token, user: existUser });
   } catch (error) {
     next(error);
@@ -142,7 +150,7 @@ exports.filterUser = async (req, res, next) => {
 
     //This is a must have
     filterObj.companyId = req.user.companyId;
-
+    console.log(filterObj);
     const searchResult = await prisma.user.findMany({
       where: {
         AND: filterObj,
@@ -155,6 +163,7 @@ exports.filterUser = async (req, res, next) => {
         firstName: true,
         lastName: true,
         userRole: true,
+        active: true,
       },
     });
     res.json({ searchResult });
@@ -186,12 +195,17 @@ exports.deleteUser = async (req, res, next) => {
     });
     res.json({ message: `User : ${deleteResult.username} Deleted` });
   } catch (error) {
-    if(
+    if (
       error.message.includes(
         "Foreign key constraint failed on the field: `userId`"
       )
-    ){
-      return next(createError("Cannot delete user due to this user is linked to transactions such as Order , Transactions",400))
+    ) {
+      return next(
+        createError(
+          "Cannot delete user due to this user is linked to transactions such as Order , Transactions",
+          400
+        )
+      );
     }
     next(error);
   }
@@ -212,12 +226,36 @@ exports.editUser = async (req, res, next) => {
     // delete editUser.userId;
     delete editUser.username;
     delete editUser.createdAt;
+
+    //Change active to boolean
+    if (editUser.active === "true") {
+      editUser.active = true;
+    } else {
+      editUser.active = false;
+    }
+
+    //Prevent from deactivating Admin
+    if (editUser.userRole === USER_ADMIN && !editUser.active) {
+      return next(createError("You cannot deactivate Admin user", 400));
+    }
     console.log(editUser);
     await prisma.user.update({
       where: { userId: +editUser.userId },
       data: editUser,
     });
     res.json({ message: "User information updated" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getSales = async (req, res, next) => {
+  try {
+    const searchResult = await prisma.transaction.findMany({
+      where: { User: { companyId: +req.user.companyId } },
+      include: { User: { select: { username: true } } },
+    });
+    res.json({ searchResult });
   } catch (error) {
     next(error);
   }
