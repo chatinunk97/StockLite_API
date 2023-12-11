@@ -14,7 +14,7 @@ const notFoundMiddleware = require("./middleware/defaultMiddleware/notFound");
 const errorMiddleWare = require("./middleware/defaultMiddleware/error");
 const requestLimitMiddleware = require('./middleware/defaultMiddleware/requestLimit')
 
-//Initial Middleware
+//一般 Middleware
 app.use(cors())
 app.use(requestLimitMiddleware)
 app.use(morgan("dev"));
