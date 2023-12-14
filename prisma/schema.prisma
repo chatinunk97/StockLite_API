@@ -1,6 +1,15 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+//postgresql
+//Script for changing the starting primary key
+
+//-- Create a new sequence for the shelfItemId column
+//CREATE SEQUENCE shelves_shelfItemId_seq START WITH 6001;
+
+//-- Set the default value for the shelfItemId column to use the new sequence
+//ALTER TABLE shelves ALTER COLUMN "shelfItemId" SET DEFAULT nextval('shelves_shelfItemId_seq');
+
 generator client {
   provider = "prisma-client-js"
 }
