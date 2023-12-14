@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -28,7 +28,7 @@ model User {
   updatedAt      DateTime       @updatedAt
   CompanyProfile CompanyProfile @relation(fields: [companyId], references: [companyId])
   companyId      Int
-  active      Boolean        @default(true)
+  active         Boolean        @default(true)
   transaction    Transaction[]
   orderList      OrderList[]
 
