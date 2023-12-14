@@ -27,9 +27,10 @@ exports.createTransaction = async (req, res, next) => {
     if (!(await checkQuantitySufficient(req.body.item))) {
       return next(createError("Insuffecient shelf quantity", 400));
     }
-    console.log(req.user)
+    
     const inputData = {
-      userId: +req.user.userId,sumSale : +req.body.sumSale,
+      userId: +req.user.userId,
+      sumSale : +req.body.sumSale,
       transactionToProductShelf: {
         create: req.body.item,
       },
