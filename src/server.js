@@ -3,7 +3,7 @@ const app = express();
 require("dotenv").config();
 const PORT = process.env.PORT;
 const morgan = require("morgan");
-const cors = require('cors')
+const cors = require("cors");
 
 //Routes
 const wmsRoute = require("./routes/wms-route");
@@ -12,11 +12,11 @@ const userRoute = require("./routes/user-route");
 //Middlewares
 const notFoundMiddleware = require("./middleware/defaultMiddleware/notFound");
 const errorMiddleWare = require("./middleware/defaultMiddleware/error");
-const requestLimitMiddleware = require('./middleware/defaultMiddleware/requestLimit')
+const requestLimitMiddleware = require("./middleware/defaultMiddleware/requestLimit");
 
 //一般 Middleware
-app.use(cors())
-app.use(requestLimitMiddleware)
+app.use(cors());
+app.use(requestLimitMiddleware);
 app.use(morgan("dev"));
 app.use(express.json());
 //////////
@@ -29,5 +29,5 @@ app.use(notFoundMiddleware);
 app.use(errorMiddleWare);
 
 app.listen(PORT, () => {
-  console.log(" ############ Server is running on PORT ", +PORT);
+  console.log("Server is running on PORT ", +PORT);
 });
