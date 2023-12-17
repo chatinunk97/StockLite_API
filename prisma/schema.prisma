@@ -10,6 +10,8 @@
 //-- Set the default value for the shelfItemId column to use the new sequence
 //ALTER TABLE shelves ALTER COLUMN "shelfItemId" SET DEFAULT nextval('shelves_shelfItemId_seq');
 
+// You can change db type because we are using ORM it does not matter about the syntax or settings 
+
 generator client {
   provider = "prisma-client-js"
 }
