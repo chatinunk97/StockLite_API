@@ -36,6 +36,7 @@ exports.registerAdmin = async (req, res, next) => {
     // Add the newly created company Id to the input value Obj
     value.companyId = companyCreateResult.companyId;
     value.userRole = USER_ADMIN;
+    //This is just for safety perpose it's online
     value.active = false;
     // Delete Company Name , already created
     delete value.companyName;
