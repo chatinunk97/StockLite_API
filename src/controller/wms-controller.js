@@ -1,4 +1,5 @@
 const prisma = require("../models/prisma");
+const { checkDemo } = require("../utils/checkDemo");
 const createError = require("../utils/createError");
 const {
   ValidateSupplierInput,
@@ -22,6 +23,10 @@ const {
 exports.createSupplier = async (req, res, next) => {
   try {
     const data = req.body;
+
+    if (checkDemo(+req.user.userId))
+      return next(createError("Demo-user action is prohibited", 405));
+
     data.companyId = +req.user.companyId;
     const { value, error } = ValidateSupplierInput(data);
     if (error) {
@@ -78,6 +83,10 @@ exports.editSupplier = async (req, res, next) => {
   try {
     delete req.body.createdAt;
     delete req.body.updatedAt;
+
+    if (checkDemo(+req.user.userId))
+      return next(createError("Demo-user action is prohibited", 405));
+
     const { value, error } = ValidateSupplierInput(req.body);
     if (error) {
       return next(error);
@@ -109,6 +118,9 @@ exports.editSupplier = async (req, res, next) => {
 exports.deleteSupplier = async (req, res, next) => {
   try {
     const { value, error } = ValidateIds(req.query.supplierId);
+
+    if (checkDemo(+req.user.userId))
+      return next(createError("Demo-user action is prohibited", 405));
     if (error) {
       return next(error);
     }
@@ -158,6 +170,10 @@ exports.createOrder = async (req, res, next) => {
   try {
     const data = req.body;
     data.userId = req.user.userId;
+
+    if (checkDemo(+req.user.userId))
+      return next(createError("Demo-user action is prohibited", 405));
+
     const { value, error } = checkCreateOrder(data);
     if (error) {
       return next(error);
@@ -242,7 +258,8 @@ exports.editOrder = async (req, res, next) => {
     editData.orderId = orderId;
     editData.sumPrice = sumPrice;
     editData.receiveDate = receiveDate;
-
+    if (checkDemo(+req.user.userId))
+      return next(createError("Demo-user action is prohibited", 405));
     const { value, error } = checkEditOrder(editData);
     if (error) {
       return next(error);
@@ -281,6 +298,19 @@ exports.deleteOrder = async (req, res, next) => {
     if (!deleteOrder) {
       return next(createError("No order found", 400));
     }
+
+    //Search for associated stock
+    const associatedStock = await prisma.productStock.findFirst({
+      where: { orderId: deleteOrder.orderId },
+    });
+    if (associatedStock)
+      return next(
+        createError(
+          `Cannot delete this Order because Stock number : ${associatedStock.stockId} is linked to this Order`,
+          400
+        )
+      );
+
     const deletedOrder = await prisma.orderList.delete({
       where: { orderId: deleteOrder.orderId },
     });
@@ -295,6 +325,9 @@ exports.createStock = async (req, res, next) => {
   try {
     console.log(req.body);
     const { value, error } = checkCreateStock(req.body);
+
+    if (checkDemo(+req.user.userId))
+      return next(createError("Demo-user action is prohibited", 405));
     if (error) {
       return next(error);
     }
@@ -386,6 +419,9 @@ exports.filterStock = async (req, res, next) => {
 exports.deleteStock = async (req, res, next) => {
   try {
     const { value, error } = ValidateIds(req.query.stockId);
+
+    if (checkDemo(+req.user.userId))
+      return next(createError("Demo-user action is prohibited", 405));
     if (error) {
       return next(error);
     }
@@ -393,6 +429,18 @@ exports.deleteStock = async (req, res, next) => {
     if (!deleteStock) {
       return next(createError("No stock found", 400));
     }
+
+    const associatedShelf = await prisma.productShelf.findFirst({
+      where: { stockId: value },
+    });
+    if (associatedShelf)
+      return next(
+        createError(
+          `Cannot delete this Stock because Shelf number : ${associatedShelf.shelfItemId} is linked to this Stock`,
+          400
+        )
+      );
+
     const deletedStock = await prisma.productStock.delete({
       where: { stockId: value },
     });
@@ -449,12 +497,14 @@ exports.editStock = async (req, res, next) => {
 //Shelf # note 1 Stock to 1 Shelf
 exports.createShelf = async (req, res, next) => {
   try {
-    console.log(req.body)
     const { value, error } = ValidateIds(req.body.stockId);
+
+    if (checkDemo(+req.user.userId))
+      return next(createError("Demo-user action is prohibited", 405));
     if (error) {
       return next(error);
     }
-    console.log(value,error)
+    console.log(value, error);
     const existingStock = await prisma.productStock.findFirst({
       where: { stockId: value },
     });
@@ -477,7 +527,7 @@ exports.createShelf = async (req, res, next) => {
         stockId: value,
       },
     });
-    res.json({createResult});
+    res.json({ createResult });
   } catch (error) {
     next(error);
   }
@@ -538,7 +588,7 @@ exports.filterShelf = async (req, res, next) => {
     if (value.productName) {
       filterStockObj.productName = { startsWith: "%" + value.productName };
     }
-    if(value.stockQuantity){
+    if (value.stockQuantity) {
       filterStockObj.stockQuantity = { gt: value.stockQuantity - 1 };
     }
     if (value.expirationDate) {
@@ -546,19 +596,18 @@ exports.filterShelf = async (req, res, next) => {
     }
 
     //Filter for productShelf table
-    const filterShelfObj = {}
-    if(value.shelfItemId){
-      
-      filterShelfObj.shelfItemId = value.shelfItemId
+    const filterShelfObj = {};
+    if (value.shelfItemId) {
+      filterShelfObj.shelfItemId = value.shelfItemId;
     }
-    if(value.stockId){
-      filterShelfObj.stockId = value.stockId
+    if (value.stockId) {
+      filterShelfObj.stockId = value.stockId;
     }
-    if(value.shelfQuantity){
-      filterShelfObj.shelfQuantity = { gt: value.shelfQuantity - 1 }
+    if (value.shelfQuantity) {
+      filterShelfObj.shelfQuantity = { gt: value.shelfQuantity - 1 };
     }
-    console.log(filterShelfObj)
-    console.log(filterStockObj)
+    console.log(filterShelfObj);
+    console.log(filterStockObj);
     const searchResult = await prisma.productShelf.findMany({
       where: {
         AND: [
@@ -585,7 +634,7 @@ exports.filterShelf = async (req, res, next) => {
           },
         },
       },
-      orderBy : {shelfItemId : "desc"}
+      orderBy: { shelfItemId: "desc" },
     });
     res.json({ searchResult });
   } catch (error) {
@@ -596,6 +645,9 @@ exports.filterShelf = async (req, res, next) => {
 exports.deleteShelf = async (req, res, next) => {
   try {
     const { value, error } = ValidateIds(req.query.shelfItemId);
+
+    if (checkDemo(+req.user.userId))
+      return next(createError("Demo-user action is prohibited", 405));
     if (error) {
       return next(error);
     }

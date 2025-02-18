@@ -20,7 +20,7 @@ exports.authentication = async (req, res, next) => {
       return next(createError("You are not authorized", 401));
     }
     delete user.password;
-    req.user = user;    
+    req.user = user;
     next();
   } catch (error) {
     if (

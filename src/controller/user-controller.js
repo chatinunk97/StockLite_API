@@ -12,8 +12,9 @@ const {
   checkExistingUser,
   checkExistingCompany,
 } = require("../validators/userValidator");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { checkDemo } = require("../utils/checkDemo");
 
 exports.registerAdmin = async (req, res, next) => {
   try {
@@ -93,6 +94,10 @@ exports.login = async (req, res, next) => {
 exports.createUser = async (req, res, next) => {
   try {
     const { value, error } = registerUserSchema.validate(req.body);
+
+    if (checkDemo(+req.user.userId))
+      return next(createError("Demo-user action is prohibited", 405));
+
     if (error) {
       return next(error);
     }
@@ -178,6 +183,8 @@ exports.deleteUser = async (req, res, next) => {
   try {
     const deleteUser = +req.query.userId;
     const companyId = +req.user.companyId;
+    if (checkDemo(+req.user.userId))
+      return next(createError("Demo-user action is prohibited", 405));
     if (deleteUser === +req.user.userId) {
       return next(createError("You cannot delete your own account", 400));
     }
@@ -217,6 +224,8 @@ exports.editUser = async (req, res, next) => {
   try {
     const editUser = req.body;
     const companyId = +req.user.companyId;
+    if (checkDemo(+req.user.userId))
+      return next(createError("Demo-user action is prohibited", 405));
     const foundUser = await prisma.user.findFirst({
       where: {
         AND: [{ userId: +editUser.userId }, { companyId: companyId }],
