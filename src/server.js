@@ -15,7 +15,9 @@ const errorMiddleWare = require("./middleware/defaultMiddleware/error");
 const requestLimitMiddleware = require("./middleware/defaultMiddleware/requestLimit");
 
 //一般 Middleware
-app.use(cors({ origin: "https://stock-lite-front.vercel.app/" }));
+app.use(cors());
+app.set("trust proxy", true); // Trust all proxies
+
 app.use(requestLimitMiddleware);
 app.use(morgan("dev"));
 app.use(express.json());
