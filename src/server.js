@@ -16,7 +16,7 @@ const requestLimitMiddleware = require("./middleware/defaultMiddleware/requestLi
 
 //一般 Middleware
 app.use(cors());
-app.set("trust proxy", true); // Trust all proxies
+// app.set("trust proxy", true); // Trust all proxies
 
 app.use(requestLimitMiddleware);
 app.use(morgan("dev"));
